@@ -6,17 +6,24 @@ import axios from "axios";
 import getSocket from "@/app/getSocket";
 
 
+
 export default function RoomPage(){
     const [song, setSong] = useState("");
     const [videoId, setVideoId] = useState(null);
     const [queue, setQueue] = useState([]);
-    const { roomId } = useParams();
+   const { roomId } = useParams();
    const [playedSeconds, setPlayedSeconds] = useState(0);
    const [seekTime, setSeekTime] = useState(null);
    const [newvideoId, setNewVideoId] = useState(null);
+   const [map, setMap] = useState(new Map());
+   const [skipvotes, setSkipvotes] = useState(0);
+   const [skipmap, setSkipmap] = useState(new Map());
+   const [songskiped, setSongSkiped] = useState(false);
+
 
     const API_KEY = "AIzaSyC7vHD2boW3PSryqZbgcYZG_sYWHGoBcPI";
- 
+    
+    
     const handleAddSong = () => {
     const url= JSON.stringify(song);
     const videoId =   url.split('=')[1].split('"')[0];
@@ -68,7 +75,7 @@ export default function RoomPage(){
             if(data.type === "sendTimeLine")
                 {
                     if (ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({ type: "sendTimeLine", roomId, playedSeconds , videoId }));
+                    ws.send(JSON.stringify({ type: "sendTimeLine", roomId, playedSeconds , videoId ,queue }));
                     }
                 }  
                 if(data.type === "sendT")
@@ -77,7 +84,7 @@ export default function RoomPage(){
                         console.log("timeline recieved");
                         setSeekTime(data.playedSeconds);
                         setVideoIdfun(data.videoId);
-                        
+                        setQueue(data.queue);
                     }
         };
 
@@ -112,6 +119,13 @@ export default function RoomPage(){
 
 
     const handleupvote = (id) => {
+        if(map.has(id))
+        {
+            return;
+        }
+        
+        setMap(map.set(id,1));
+
         const newQueue = queue.map((song) => {
             if (song.id === id) {
                 return { ...song, upvotes: song.upvotes + 1 };
@@ -123,6 +137,29 @@ export default function RoomPage(){
         
         setQueue(newQueue);
     }
+
+    const handleSkipSong = () => {
+        if(skipmap.has(videoId))
+        {
+            return;
+        }
+        setSkipmap(skipmap.set(videoId,1));
+        setSkipvotes((prevSkipVotes) => {
+            const newSkipVotes = prevSkipVotes + 1;
+            console.log("skipvotes", newSkipVotes);
+    
+            if (newSkipVotes >= 1) {
+                setSkipvotes(0);
+                setNewVideoId(null);
+                setVideoId(null);
+                setSongSkiped(true);
+            
+            }
+    
+            return newSkipVotes;
+        });
+    }
+
 
     const fetchdata = async (videoId) => {
         const res=await axios.get(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet,statistics,contentDetails&key=${API_KEY}`);
@@ -138,11 +175,33 @@ export default function RoomPage(){
     }
 
     useEffect(() => {
-       
+       if(videoId || newvideoId) return;
+    
+       const updatedQueue = () =>{
+        setQueue((prevQueue) => {
+            if (prevQueue.length === 0) return [];
 
-    }, [queue]);
+            const nextVideoId = prevQueue[0]?.id || null;
+            console.log("before queue", prevQueue);
+            console.log("videoId to play next:", nextVideoId);
+   
+            setVideoId(nextVideoId);
+            setNewVideoId(nextVideoId);
+            console.log(videoId);
+            const updatedQueue = prevQueue.slice(1);
+            return updatedQueue;
+        });
+        console.log("after queue", queue);
+        sendQueueUpdate();
+    }
+    if(songskiped)
+    {
+        updatedQueue();
+        setSongSkiped(false);
+    }
+    }, [songskiped]);
 
-
+    useEffect(()=>{},[queue]);
     return (
         <div className="bg-gray-900 text-white min-h-screen flex">
             <div className="container mx-auto p-4 text-center flex-1">
@@ -156,8 +215,10 @@ export default function RoomPage(){
                     className="p-2 border border-gray-500 rounded mb-4 w-full max-w-md mx-auto text-black"
                 />
                 <button onClick={handleAddSong} className="p-2 bg-blue-600 hover:bg-blue-800 text-white rounded mb-4">Add Song</button>
-                {(videoId || newvideoId) && (
-                    <YouTubeVideo
+                {(videoId || newvideoId ) && (
+                    (<>
+                    
+                        <YouTubeVideo
                         params={{
                             id: videoId,
                             queue: queue,
@@ -166,7 +227,12 @@ export default function RoomPage(){
                             seekTime,
                             newvideoId: newvideoId,
                         }}
-                    />
+                    />  
+                        <div >
+                       <button onClick={handleSkipSong} className="py-1 px-2 bg-green-600 hover:bg-green-800 text-white rounded"> Skip : {skipvotes}</button>
+                    </div>
+                    </>
+                    )
                 )}
             </div>
             <div className="w-1/3 bg-gray-800 p-4 overflow-y-auto">

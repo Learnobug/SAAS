@@ -62,12 +62,13 @@ wss.on('connection', (ws) => {
                 const roomId= data.roomId;
                 const playedSeconds = data.playedSeconds;
                 const videoId = data.videoId;
+                const queue = data.queue;
                 // console.log("queue recieved",queue);
                 if(newroomUser[roomId]) {
                     
                     newroomUser[roomId].forEach(client => {
                         //  console.log("client",client);
-                            client.send(JSON.stringify({ type: "sendT", playedSeconds:playedSeconds , videoId:videoId })); 
+                            client.send(JSON.stringify({ type: "sendT", playedSeconds:playedSeconds , videoId:videoId , queue:queue })); 
                     });
                     newroomUser[roomId]=[];
                 }
