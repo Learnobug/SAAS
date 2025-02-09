@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import axios from "axios";
 import getSocket from "@/app/getSocket";
 
+
 export default function RoomPage(){
     const [song, setSong] = useState("");
     const [videoId, setVideoId] = useState(null);
@@ -23,7 +24,7 @@ export default function RoomPage(){
     fetchdata(videoId);
    setVideoId(videoId);
    sendQueueUpdate();
-    
+    setSong("");
     };
 
     useEffect(() => {
@@ -143,40 +144,45 @@ export default function RoomPage(){
 
 
     return (
-        <div className="container mx-auto p-4 text-center">
-            <h1 className="text-3xl font-bold mb-4">Welcome to the room</h1>
-            <p className="mb-4">Add Your Own Song</p>
-            <input
-                value={song}
-                onChange={(e) => setSong(e.target.value)}
-                type="text"
-                placeholder="Enter song name"
-                className="p-2 border border-gray-300 rounded mb-4 w-full max-w-md mx-auto"
-            />
-            <button onClick={handleAddSong} className="p-2 bg-blue-500 text-white rounded mb-4">Add Song</button>
-            {queue.map((song) => (
-                <div key={song.id} className="flex items-center justify-between p-2 border-b border-gray-300">
-                    <img src={song.thumbnail} alt={song.title} className="w-16 h-16 mr-4" />
-                    <div className="flex-1 text-left">
-                        <p className="font-semibold">{song.title}</p>
-                        <p>
-                            <button onClick={() => handleupvote(song.id)} className="p-1 bg-green-500 text-white rounded">Upvotes</button>: {song.upvotes}
-                        </p>
-                    </div>
-                </div>
-            ))}
-            {(videoId || newvideoId) && (
-                <YouTubeVideo
-                    params={{
-                        id: videoId,
-                        queue: queue,
-                        setQueue: setQueue,
-                        setPlayedSeconds: setPlayedSeconds,
-                        seekTime,
-                        newvideoId: newvideoId,
-                    }}
+        <div className="bg-gray-900 text-white min-h-screen flex">
+            <div className="container mx-auto p-4 text-center flex-1">
+                <h1 className="text-3xl font-bold mb-4">Welcome to the room</h1>
+                <p className="mb-4">Add Your Own Song</p>
+                <input
+                    value={song}
+                    onChange={(e) => setSong(e.target.value)}
+                    type="text"
+                    placeholder="Enter song name"
+                    className="p-2 border border-gray-500 rounded mb-4 w-full max-w-md mx-auto text-black"
                 />
-            )}
+                <button onClick={handleAddSong} className="p-2 bg-blue-600 hover:bg-blue-800 text-white rounded mb-4">Add Song</button>
+                {(videoId || newvideoId) && (
+                    <YouTubeVideo
+                        params={{
+                            id: videoId,
+                            queue: queue,
+                            setQueue: setQueue,
+                            setPlayedSeconds: setPlayedSeconds,
+                            seekTime,
+                            newvideoId: newvideoId,
+                        }}
+                    />
+                )}
+            </div>
+            <div className="w-1/3 bg-gray-800 p-4 overflow-y-auto">
+                <h2 className="text-xl font-bold mb-4">Queue</h2>
+                {queue.map((song) => (
+                    <div key={song.id} className="flex items-center justify-between p-2 border-b border-gray-700">
+                        <img src={song.thumbnail} alt={song.title} className="w-16 h-16 mr-4" />
+                        <div className="flex-1 text-left">
+                            <p className="font-semibold">{song.title}</p>
+                            <p>
+                                <button onClick={() => handleupvote(song.id)} className="py-1 px-2 bg-green-600 hover:bg-green-800 text-white rounded">Upvotes</button>  : {song.upvotes}
+                            </p>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }
