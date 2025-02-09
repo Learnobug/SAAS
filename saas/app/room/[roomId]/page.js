@@ -1,12 +1,11 @@
 "use client";
 import { use, useState,useEffect } from "react";
 import YouTubeVideo from "@/components/Video";
-import YouTubePlayer from "youtube-player";
 import { useParams } from "next/navigation";
 import axios from "axios";
 import getSocket from "@/app/getSocket";
 
-export default  function RoomPage(){
+export default function RoomPage(){
     const [song, setSong] = useState("");
     const [videoId, setVideoId] = useState(null);
     const [queue, setQueue] = useState([]);
@@ -77,6 +76,7 @@ export default  function RoomPage(){
                         console.log("timeline recieved");
                         setSeekTime(data.playedSeconds);
                         setVideoIdfun(data.videoId);
+                        
                     }
         };
 
@@ -118,7 +118,6 @@ export default  function RoomPage(){
             return song;
         });
 
-        // sort the queue on the basis of upvotes
         newQueue.sort((a, b) => b.upvotes - a.upvotes);
         
         setQueue(newQueue);
@@ -144,20 +143,40 @@ export default  function RoomPage(){
 
 
     return (
-        <div>
-        <h1> Welcome to room</h1>
-        <p>Add Your Own Song</p>
-        <input value={song} onChange={(e) => setSong(e.target.value)} type="text" placeholder="Enter song name" />
-        <button onClick={handleAddSong}>Add Song</button>
-        {queue.map((song) => (
-            <div key={song.id}>
-                <img src={song.thumbnail} alt={song.title} />
-                <p>{song.title}</p>
-                
-                <p><button onClick={() => handleupvote(song.id)}>Upvotes</button>: {song.upvotes}</p>
-            </div>
-        ))}
-        {(videoId || newvideoId) && <YouTubeVideo params={{id: videoId, queue: queue, setQueue:setQueue , setPlayedSeconds:setPlayedSeconds, seekTime , newvideoId:newvideoId}}/>}
+        <div className="container mx-auto p-4 text-center">
+            <h1 className="text-3xl font-bold mb-4">Welcome to the room</h1>
+            <p className="mb-4">Add Your Own Song</p>
+            <input
+                value={song}
+                onChange={(e) => setSong(e.target.value)}
+                type="text"
+                placeholder="Enter song name"
+                className="p-2 border border-gray-300 rounded mb-4 w-full max-w-md mx-auto"
+            />
+            <button onClick={handleAddSong} className="p-2 bg-blue-500 text-white rounded mb-4">Add Song</button>
+            {queue.map((song) => (
+                <div key={song.id} className="flex items-center justify-between p-2 border-b border-gray-300">
+                    <img src={song.thumbnail} alt={song.title} className="w-16 h-16 mr-4" />
+                    <div className="flex-1 text-left">
+                        <p className="font-semibold">{song.title}</p>
+                        <p>
+                            <button onClick={() => handleupvote(song.id)} className="p-1 bg-green-500 text-white rounded">Upvotes</button>: {song.upvotes}
+                        </p>
+                    </div>
+                </div>
+            ))}
+            {(videoId || newvideoId) && (
+                <YouTubeVideo
+                    params={{
+                        id: videoId,
+                        queue: queue,
+                        setQueue: setQueue,
+                        setPlayedSeconds: setPlayedSeconds,
+                        seekTime,
+                        newvideoId: newvideoId,
+                    }}
+                />
+            )}
         </div>
     );
-    }
+}

@@ -27,7 +27,7 @@ wss.on('connection', (ws) => {
                 }
                 rooms.get(roomId).add(ws);
                 // console.log(rooms);
-                ws.send(`You have joined room ${roomId}`);
+                // ws.send(`You have joined room ${roomId}`);
             } 
             else if (data.type === "message") {
                 const roomId = data.roomId;
@@ -38,7 +38,7 @@ wss.on('connection', (ws) => {
                 if (rooms.has(roomId)) {
                     rooms.get(roomId).forEach(client => {
                         if (client.readyState === WebSocket.OPEN) {
-                            client.send(`Room ${roomId}: ${msg}`);
+                            // client.send(`Room ${roomId}: ${msg}`);
                         }
                     });
                 }

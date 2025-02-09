@@ -8,12 +8,13 @@ export default function YouTubeVideo({params}) {
   
   const {queue,setQueue,setPlayedSeconds,seekTime,newvideoId}=params;
   const [videoid, setVideoId]= useState(null);
-  const [playing,setplaying]=useState(false);
+  const [Playing,setplaying]=useState(false);
   const [play,setPlay]=useState(true);
+  const [mute,setMute]=useState(true);
  
 
   useEffect(() => {
-    if(queue.length>0 && !playing){
+    if(queue.length>0 && !Playing){
       setVideoId(queue[0].id);
       setplaying(true);
       setQueue(queue.slice(1));
@@ -24,7 +25,7 @@ export default function YouTubeVideo({params}) {
     if (videoref.current ) {
         videoref.current.seekTo(videoref.current.getCurrentTime()+Number(seekTime));
         console.log("Seeking to:", seekTime);
-       setPlay(true); 
+       setPlay(true);
     }
 }, [seekTime,videoref.current]);
 
@@ -43,7 +44,8 @@ export default function YouTubeVideo({params}) {
       onEnded={handleEnd}
        controls
        onSeek={() => setPlay(true)}
-       playing={true}  
+        playing={play}
+        muted = {mute}
       onProgress={({ playedSeconds }) => setPlayedSeconds(playedSeconds)}
       />
    

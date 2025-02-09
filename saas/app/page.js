@@ -26,12 +26,24 @@ export default function Home() {
     }
   };
   return (
-    <div>
-      <button onClick={handleCreateRoom}>
+    <div className="bg-gray-800 h-screen flex flex-col justify-center items-center">
+      <button 
+        onClick={handleCreateRoom} 
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
+      >
         Create a room
       </button>
-      <input value ={roomCode} onChange={(e)=> setRoomCode(e.target.value)}  type="text" placeholder="Enter room code" />
-      <button onClick={handleJoinRoom}>
+      <input 
+        value={roomCode} 
+        onChange={(e) => setRoomCode(e.target.value)} 
+        type="text" 
+        placeholder="Enter room code" 
+        className="mb-4 p-2 border border-gray-300 rounded"
+      />
+      <button 
+        onClick={handleJoinRoom} 
+        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+      >
         Join room
       </button>
     </div>
