@@ -2,7 +2,7 @@ import { WebSocketServer } from 'ws';
 
 const wss = new WebSocketServer({ port: 3001 }); 
 const rooms = new Map(); 
-const newroomUser ={};
+
 wss.on('connection', (ws) => {
     console.log('Client connected');
 
