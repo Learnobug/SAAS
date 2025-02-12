@@ -18,7 +18,7 @@ export default function RoomPage() {
   const [skipmap, setSkipmap] = useState(new Map());
   const [songskiped, setSongSkiped] = useState(false);
   const [roomOwner, setRoomOwner] = useState(false);
-
+ 
   const [room, setRoom] = useState({
     Users: 0,
     skipvotes: 0,
@@ -63,10 +63,10 @@ export default function RoomPage() {
 
   const sendQueueUpdate = () => {
     const ws = getSocket();
-
+  
     const updateQueue = () => {
       ws.send(JSON.stringify({ type: "Queue", roomId, queue: room.queue }));
-      console.log("Queue sent:", queue);
+      
     };
 
     if (ws.readyState === WebSocket.OPEN) {
@@ -77,6 +77,9 @@ export default function RoomPage() {
       return () => ws.removeEventListener("open", updateQueue);
     }
   };
+
+
+  
 
   useEffect(() => {
     if (!roomId) return;
@@ -118,6 +121,10 @@ export default function RoomPage() {
         setRoomOwner(true);
         console.log("You are the owner of the room");
       }
+      if (data.type == "Skipvotes") {
+        setRoom((prevRoom) => ({ ...prevRoom, skipvotes: data.skipvotes }));
+      }
+
       
         if (data.type == "CurrentSong") {
           console.log("CurrentSong Received:", data.videoId);
@@ -139,55 +146,19 @@ export default function RoomPage() {
     };
   }, [room]);
 
-  useEffect(() => {
-    const ws = getSocket();
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log(data);
-      if (data.type === "QueueUpdated") {
-        console.log("Queue updated:", data.queue);
-        setQueue(data.queue);
-      }
-    };
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === "sendTimeLine") {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(
-            JSON.stringify({
-              type: "sendTimeLine",
-              roomId,
-              playedSeconds,
-              videoId,
-              queue,
-            })
-          );
-        }
-      }
-      if (data.type === "sendT") {
-        console.log(data);
-        console.log("timeline recieved");
-        setSeekTime(data.playedSeconds);
-        setVideoIdfun(data.videoId);
-        setQueue(data.queue);
-      }
-    };
-  }, [videoId, playedSeconds]);
-
-  const setVideoIdfun = (videoId) => {
-    console.log("videoIdxsx", videoId);
-    setNewVideoId(videoId);
-  };
+ 
+ 
 
   const handleupvote = (id) => {
+     
     if (map.has(id)) {
       return;
     }
 
-    setMap(map.set(id, 1));
+    setMap(new Map(map).set(id, 1));
 
-    const newQueue = queue.map((song) => {
+
+    const newQueue = room.queue.map((song) => {
       if (song.id === id) {
         return { ...song, upvotes: song.upvotes + 1 };
       }
@@ -196,27 +167,31 @@ export default function RoomPage() {
 
     newQueue.sort((a, b) => b.upvotes - a.upvotes);
 
-    setQueue(newQueue);
+    setRoom((prevRoom) => ({ ...prevRoom, queue: newQueue }));
+    
+    const ws = getSocket();
+
+     if (ws.readyState === WebSocket.OPEN) {
+        console.log("handleupvotes",newQueue);
+        ws.send(JSON.stringify({ type: "HandleUpvotes", roomId, queue: newQueue }));
+      } 
   };
 
+ 
+
   const handleSkipSong = () => {
-    if (skipmap.has(videoId)) {
+    const ws = getSocket();
+    if (skipmap.has(roomId)) {
       return;
     }
-    setSkipmap(skipmap.set(videoId, 1));
-    setSkipvotes((prevSkipVotes) => {
-      const newSkipVotes = prevSkipVotes + 1;
-      console.log("skipvotes", newSkipVotes);
+    setSkipmap(new Map(skipmap).set(roomId, 1));
+    setRoom((prevRoom) => ({ ...prevRoom, skipvotes: room.skipvotes + 1 }));
+    const newSkipvotes = room.skipvotes + 1;
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "Skipvotes", roomId, skipvotes: newSkipvotes }));
+      } 
 
-      if (newSkipVotes >= 1) {
-        setSkipvotes(0);
-        setNewVideoId(null);
-        setVideoId(null);
-        setSongSkiped(true);
-      }
 
-      return newSkipVotes;
-    });
   };
 
   useEffect(() => {
@@ -286,7 +261,7 @@ export default function RoomPage() {
                 className="py-1 px-2 bg-green-600 hover:bg-green-800 text-white rounded"
               >
                 {" "}
-                Skip : {skipvotes}
+                Skip : {room.skipvotes}
               </button>
             </div>
           </>

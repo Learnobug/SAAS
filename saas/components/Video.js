@@ -11,6 +11,26 @@ export default function YouTubeVideo({ params }) {
   const [mute, setMute] = useState(true);
   const [playedSeconds, setPlayedSeconds] = useState(0);
 
+   useEffect(()=>{
+    const ws = getSocket();
+    const handleMessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log(data);
+      if (data.type === "ChangeSong") {
+        console.log("ChangeSong Received:", data.videoId);
+        setVideoId(data.videoId);
+        setRoom((prevRoom) => ({ ...prevRoom, currentSong: data.videoId }));
+        setPlaying(true);
+      }
+    };
+
+    ws.addEventListener("message", handleMessage);
+
+    return () => {
+      ws.removeEventListener("message", handleMessage);
+    };
+   },[])
+
   useEffect(() => {
     if (!roomOwner) return;
     const ws = getSocket();
@@ -43,17 +63,27 @@ export default function YouTubeVideo({ params }) {
   }, [id, room?.currentSong]);
 
   useEffect(() => {
-    console.log("rrom",room);
-    console.log("roomowner",roomOwner);
-    if (!room || !room.currentSong || room.timeline == null  || roomOwner) return;
-
-    console.log("room data:", room);
-    if (videoref.current) {
-      setVideoId(room.currentSong);
-      videoref.current.seekTo(videoref.current.getCurrentTime()+Number(room.timeline));
-      setPlaying(true);
-    }
-  }, [room]); 
+    if (!room || !room.currentSong || room.timeline == null || roomOwner) return;
+  
+    const checkPlayerReady = () => {
+      if (videoref.current && videoref.current.getCurrentTime) {
+        const currentTime = videoref.current.getCurrentTime();
+        if (currentTime !== null && !isNaN(currentTime)) {
+          setVideoId(room.currentSong);
+          console.log("Setting video ID, current time:", currentTime);
+          videoref.current.seekTo(currentTime + Number(room.timeline));
+          setPlaying(true);
+        } else {
+          console.log("Player not ready, retrying...");
+          setTimeout(checkPlayerReady, 500);
+        }
+      }
+    };
+  
+    checkPlayerReady();
+  }, [room, videoref]);
+  
+  
 
   return (
     <ReactPlayer
