@@ -60,17 +60,18 @@ wss.on('connection', (ws) => {
             }
             if(data.type=='CurrentSong')
             {
+                console.log("Current Song Received:", data);
                 const roomId = data.roomId;
                 const videoId = data.videoId;
                 const TimeLine = data.TimeLine;
                 if(!rooms.has(roomId)) return;
-                if(!videoId) return;
+                
                 const room = rooms.get(roomId);
                 room.currentSong = videoId;
                 room.timeline = TimeLine;
                 room.Users.forEach(client => {
                     if (client.readyState === ws.OPEN) {
-                        console.log("Sending Current Song to client");
+                        
                         client.send(JSON.stringify({ type: "CurrentSong", videoId, TimeLine }));
                     }
                 });

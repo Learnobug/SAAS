@@ -21,7 +21,7 @@ export default function YouTubeVideo({ params }) {
         ws.send(
           JSON.stringify({
             type: "CurrentSong",
-            videoId: id,
+            videoId: room.currentSong,
             TimeLine: playedSeconds,
             roomId: roomId,
           })
@@ -50,8 +50,7 @@ export default function YouTubeVideo({ params }) {
     console.log("room data:", room);
     if (videoref.current) {
       setVideoId(room.currentSong);
-      videoref.current.seekTo(videoref.current.getCurrentTime()+Number(room.timeline)); // ✅ Use absolute seek time
-      console.log("Seeking to:", room.timeline);
+      videoref.current.seekTo(videoref.current.getCurrentTime()+Number(room.timeline));
       setPlaying(true);
     }
   }, [room]); 
@@ -59,7 +58,7 @@ export default function YouTubeVideo({ params }) {
   return (
     <ReactPlayer
       ref={videoref}
-      url={`https://www.youtube.com/watch?v=${videoId}`}
+      url={`https://www.youtube.com/watch?v=${room.currentSong}`}
       controls
       playing={true}
       muted={mute}

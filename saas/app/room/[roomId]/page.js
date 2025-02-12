@@ -129,6 +129,7 @@ export default function RoomPage() {
             }));
           }
         }
+        console.log(room);
       
     };
     ws.addEventListener("message", handleMessage);
