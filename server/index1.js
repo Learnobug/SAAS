@@ -26,8 +26,8 @@ wss.on('connection', (ws) => {
                     });
                     ws.send(JSON.stringify({ type: "roomOwner"  }));
                 }
-                
                 const room = rooms.get(roomId);
+                room.Users.push(ws);
                 if(room.Users.length>0)
                 {
                     ws.send(JSON.stringify({ type: "Queue", queue: room.queue }));
@@ -37,7 +37,6 @@ wss.on('connection', (ws) => {
                     }
                 }
 
-                room.Users.push(ws);
                 // console.log("Users in room:", room.Users.length);
                 room.Users.forEach(client => {
                     if (client.readyState === ws.OPEN) {
@@ -69,6 +68,12 @@ wss.on('connection', (ws) => {
                 const room = rooms.get(roomId);
                 room.currentSong = videoId;
                 room.timeline = TimeLine;
+                room.Users.forEach(client => {
+                    if (client.readyState === ws.OPEN) {
+                        console.log("Sending Current Song to client");
+                        client.send(JSON.stringify({ type: "CurrentSong", videoId, TimeLine }));
+                    }
+                });
             }
         } catch (error) {
             console.log(error);

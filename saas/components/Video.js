@@ -61,7 +61,7 @@ export default function YouTubeVideo({ params }) {
       ref={videoref}
       url={`https://www.youtube.com/watch?v=${videoId}`}
       controls
-      playing={playing}
+      playing={true}
       muted={mute}
       onSeek={() => setPlaying(true)}
       onProgress={({ playedSeconds }) => setPlayedSeconds(playedSeconds)}
