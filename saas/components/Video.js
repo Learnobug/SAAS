@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import ReactPlayer from "react-player";
 import getSocket from "@/app/getSocket";
 
+
 export default function YouTubeVideo({ params }) {
   const videoref = useRef(null);
   const { id, room, setRoom, roomOwner, roomId } = params;
@@ -22,6 +23,8 @@ export default function YouTubeVideo({ params }) {
         setVideoId(data.videoId);
         setRoom((prevRoom) => ({ ...prevRoom, currentSong: data.videoId }));
         setPlaying(true);
+        setPlayedSeconds(0);
+        setRoom((prevRoom) => ({ ...prevRoom, timeline: 0 }));
       }
       if(data.type=="TimeLine")
       {
@@ -94,6 +97,19 @@ export default function YouTubeVideo({ params }) {
     checkPlayerReady();
   }, [room, videoref]);
   
+  const handleVideoEnd  = () =>{
+    console.log("Video Ended");
+    const ws = getSocket();
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(
+        JSON.stringify({
+          type: "NextSong",
+          roomId: roomId,
+        })
+      );
+    }
+  }
+
   const handleProgress = ({ playedSeconds }) => {
     const prevTime = prevTimeRef.current;
     setPlayedSeconds(playedSeconds);
@@ -124,6 +140,7 @@ export default function YouTubeVideo({ params }) {
       muted={mute}
       onSeek={() => setPlaying(true)}
       onProgress={handleProgress}
+      onEnded={handleVideoEnd}
     />
   );
 }

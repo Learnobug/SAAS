@@ -162,6 +162,35 @@ wss.on('connection', (ws) => {
                 }
             });
         }
+        if(data.type == "NextSong")
+        {
+            console.log("NextSong Received");
+            const roomId = data.roomId;
+            const room = rooms.get(roomId);
+            if(room.queue.length>=2){
+                // remove top song from queue
+                room.queue = room.queue.filter((song) => song.id !== room.currentSong);
+                // get top song from queue
+                const topSong = room.queue[0];
+                room.currentSong = topSong.id;
+                room.timeline = 0;
+                room.Users.forEach(client => {
+                    if (client.readyState === ws.OPEN) {
+                        // console.log("Sending Queue to client");
+                        client.send(JSON.stringify({ type: "Queue", queue: room.queue }));
+                    }
+                });
+                
+                room.Users.forEach(client => {
+                    if (client.readyState === ws.OPEN) {
+                        // console.log("Sending Current Song to client");
+                        client.send(JSON.stringify({ type: "TimeLine", TimeLine: room.timeline }));
+                        client.send(JSON.stringify({ type: "CurrentSong", videoId: room.currentSong, TimeLine: room.timeline }));
+                        client.send(JSON.stringify({ type: "ChangeSong", videoId: room.currentSong, TimeLine: room.timeline }));
+                    }
+                });
+            }
+        }
 
         } catch (error) {
             console.log(error);
