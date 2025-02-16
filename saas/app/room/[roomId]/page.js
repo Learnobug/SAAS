@@ -42,11 +42,12 @@ export default function RoomPage() {
       upvotes: 0,
     };
     const updatedQueue = [...room.queue, song];
+    room.queue.sort((a, b) => b.upvotes - a.upvotes);
     const ws = getSocket();
     if (room.currentSong === null) {
-      ws.send(
-        JSON.stringify({ type: "CurrentSong", roomId, videoId, TimeLine: 0 })
-      );
+      // ws.send(
+      //   JSON.stringify({ type: "CurrentSong", roomId, videoId, TimeLine: 0 })
+      // );
       ws.send(JSON.stringify({ type: "Queue", roomId, queue: updatedQueue }));
     } else {
       ws.send(JSON.stringify({ type: "Queue", roomId, queue: updatedQueue }));
@@ -127,7 +128,7 @@ export default function RoomPage() {
 
       
         if (data.type == "CurrentSong") {
-          console.log("CurrentSong Received:", data.videoId);
+          // console.log("CurrentSong Received:", data.videoId);
           if (room.currentSong === null) {
             setRoom((prevRoom) => ({
               ...prevRoom,
@@ -179,12 +180,16 @@ export default function RoomPage() {
 
  
 
-  const handleSkipSong = () => {
+  const handleSkipSong = (id) => {
     const ws = getSocket();
-    if (skipmap.has(roomId)) {
+    console.log("Hnadling Skip Song");
+    console.log("beforeSkipvotes:", id);
+    console.log("Skipmap:", skipmap);
+    if (skipmap.has(id)) {
       return;
     }
-    setSkipmap(new Map(skipmap).set(roomId, 1));
+    console.log("AfterSkipvotes:", room.skipvotes);
+    setSkipmap(new Map(skipmap).set(id, 1));
     setRoom((prevRoom) => ({ ...prevRoom, skipvotes: room.skipvotes + 1 }));
     const newSkipvotes = room.skipvotes + 1;
     if (ws.readyState === WebSocket.OPEN) {
@@ -257,7 +262,7 @@ export default function RoomPage() {
             />
             <div>
               <button
-                onClick={handleSkipSong}
+                onClick={() => handleSkipSong(room.currentSong)}
                 className="py-1 px-2 bg-green-600 hover:bg-green-800 text-white rounded"
               >
                 {" "}

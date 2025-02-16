@@ -32,7 +32,7 @@ wss.on('connection', (ws) => {
                 {
                     ws.send(JSON.stringify({ type: "Queue", queue: room.queue }));
                     if(room.currentSong){
-                    console.log("Sending Current Song to client");
+                    // console.log("Sending Current Song to client");
                     ws.send(JSON.stringify({ type: "CurrentSong", videoId: room.currentSong, TimeLine: room.timeline }));
                     }
                 }
@@ -40,7 +40,7 @@ wss.on('connection', (ws) => {
                 // console.log("Users in room:", room.Users.length);
                 room.Users.forEach(client => {
                     if (client.readyState === ws.OPEN) {
-                        console.log("Sending Users count to client");
+                        // console.log("Sending Users count to client");
                         client.send(JSON.stringify({ type: "Users", Users: room.Users.length }));
                     }
                 });
@@ -51,31 +51,45 @@ wss.on('connection', (ws) => {
                 const queue = data.queue;
                 const room = rooms.get(roomId);
                 room.queue = queue;
+                room.queue.sort((a, b) => b.upvotes - a.upvotes);
                 room.Users.forEach(client => {
                     if (client.readyState === ws.OPEN) {
-                        console.log("Sending Queue to client");
+                        // console.log("Sending Queue to client");
                         client.send(JSON.stringify({ type: "Queue", queue }));
                     }
                 });
+                if(room.currentSong==null && room.queue.length>0)
+                {
+                    const topSong = room.queue[0];
+                    room.currentSong = topSong.id;
+                    room.timeline = 0;
+                    room.Users.forEach(client => {
+                        if (client.readyState === ws.OPEN) {
+                            // console.log("Sending Current Song to client");
+                            client.send(JSON.stringify({ type: "CurrentSong", videoId: room.currentSong, TimeLine: room.timeline }));
+                        }
+                    });
+                }
             }
-            if(data.type=='CurrentSong')
-            {
-                // console.log("Current Song Received:", data);
-                const roomId = data.roomId;
-                const videoId = data.videoId;
-                const TimeLine = data.TimeLine;
-                if(!rooms.has(roomId)) return;
-                
-                const room = rooms.get(roomId);
-                room.currentSong = videoId;
-                room.timeline = TimeLine;
-                room.Users.forEach(client => {
-                    if (client.readyState === ws.OPEN) {
+            // if(data.type=='CurrentSong')
+            // {
+            //     // console.log("Current Song Received:", data);
+            //     const roomId = data.roomId;
+            //     const videoId = data.videoId;
+            //     const TimeLine = data.TimeLine;
+            //     if(!rooms.has(roomId)) return;
+    
+            //     const room = rooms.get(roomId);
+            //     room.queue.sort((a, b) => b.upvotes - a.upvotes);
+            //     room.currentSong = videoId;
+            //     room.timeline = TimeLine;
+            //     room.Users.forEach(client => {
+            //         if (client.readyState === ws.OPEN) {
                         
-                        client.send(JSON.stringify({ type: "CurrentSong", videoId, TimeLine }));
-                    }
-                });
-            }
+            //             client.send(JSON.stringify({ type: "CurrentSong", videoId, TimeLine }));
+            //         }
+            //     });
+            // }
             if(data.type=='HandleUpvotes')
             {
                 const roomId = data.roomId;
@@ -84,7 +98,7 @@ wss.on('connection', (ws) => {
                 room.queue = queue;
                 room.Users.forEach(client => {
                     if (client.readyState === ws.OPEN) {
-                        console.log("Sending Queue to client");
+                        // console.log("Sending Queue to client");
                         client.send(JSON.stringify({ type: "Queue", queue }));
                     }
                 });
@@ -93,22 +107,24 @@ wss.on('connection', (ws) => {
             {
                 const roomId = data.roomId;
                 const room = rooms.get(roomId);
-                const skipvotes = data.skipvotes;
-                room.skipvotes = skipvotes;
+              
+                room.skipvotes = room.skipvotes+1;
                 // remove first song from queue
-                console.log("Skipvotes",room.skipvotes);
+                // console.log("Skipvotes",room.skipvotes);
 
 
                 if( room.skipvotes>=room.Users.length/2 && room.queue.length>=2){
-                   console.log("Skipvotes",room.skipvotes);
+                //    console.log("Skipvotes",room.skipvotes);
                 // remove top song from queue
-                room.queue.shift();
+                // console.log("quue",room.queue,room.currentSong);
+                room.queue = room.queue.filter((song) => song.id !== room.currentSong);
+                // console.log("afterquue",room.queue);
                  // get top song from queue
                  const topSong = room.queue[0];
                  room.currentSong = topSong.id;
                 room.timeline = 0;
                 room.skipvotes=0;
-                console.log("Sending Current Song to client", room);
+                // console.log("Sending Current Song to client", room);
                 room.Users.forEach(client => {
                     if (client.readyState === ws.OPEN) {
                         console.log("Sending Queue to client");
@@ -118,7 +134,7 @@ wss.on('connection', (ws) => {
                 
                 room.Users.forEach(client => {
                     if (client.readyState === ws.OPEN) {
-                        console.log("Sending Current Song to client");
+                        // console.log("Sending Current Song to client");
                         client.send(JSON.stringify({ type: "CurrentSong", videoId: room.currentSong, TimeLine: room.timeline }));
                         client.send(JSON.stringify({ type: "ChangeSong", videoId: room.currentSong, TimeLine: room.timeline }));
                     }
@@ -128,7 +144,7 @@ wss.on('connection', (ws) => {
         
                 room.Users.forEach(client => {
                     if (client.readyState === ws.OPEN) {
-                        console.log("Sending Skipvotes to client");
+                        // console.log("Sending Skipvotes to client");
                         client.send(JSON.stringify({ type: "Skipvotes", skipvotes: room.skipvotes }));
                     }
                 });
