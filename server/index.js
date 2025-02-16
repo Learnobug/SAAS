@@ -150,6 +150,18 @@ wss.on('connection', (ws) => {
                 });
             
         }
+        if(data.type=="UpdateTimeline")
+        {
+            const roomId = data.roomId;
+            const room = rooms.get(roomId);
+            room.timeline = data.TimeLine;
+            room.Users.forEach(client => {
+                if (client.readyState === ws.OPEN) {
+                    // console.log("Sending TimeLine to client");
+                    client.send(JSON.stringify({ type: "TimeLine", TimeLine: room.timeline }));
+                }
+            });
+        }
 
         } catch (error) {
             console.log(error);

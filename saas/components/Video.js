@@ -10,6 +10,7 @@ export default function YouTubeVideo({ params }) {
   const [videoId, setVideoId] = useState("");
   const [mute, setMute] = useState(true);
   const [playedSeconds, setPlayedSeconds] = useState(0);
+  const prevTimeRef = useRef(0);
 
    useEffect(()=>{
     const ws = getSocket();
@@ -22,6 +23,16 @@ export default function YouTubeVideo({ params }) {
         setRoom((prevRoom) => ({ ...prevRoom, currentSong: data.videoId }));
         setPlaying(true);
       }
+      if(data.type=="TimeLine")
+      {
+        console.log("TimeLine Received:", data.TimeLine);
+        // if (videoref.current) {
+        //   videoref.current.seekTo(data.TimeLine);
+        // }
+        setPlayedSeconds(data.TimeLine);
+       setRoom((prevRoom) => ({ ...prevRoom, timeline: data.TimeLine }));
+      }
+
     };
 
     ws.addEventListener("message", handleMessage);
@@ -71,7 +82,7 @@ export default function YouTubeVideo({ params }) {
         if (currentTime !== null && !isNaN(currentTime)) {
           setVideoId(room.currentSong);
           console.log("Setting video ID, current time:", currentTime);
-          videoref.current.seekTo(currentTime + Number(room.timeline));
+          videoref.current.seekTo(Number(room.timeline));
           setPlaying(true);
         } else {
           console.log("Player not ready, retrying...");
@@ -83,7 +94,26 @@ export default function YouTubeVideo({ params }) {
     checkPlayerReady();
   }, [room, videoref]);
   
-  
+  const handleProgress = ({ playedSeconds }) => {
+    const prevTime = prevTimeRef.current;
+    setPlayedSeconds(playedSeconds);
+
+    if (Math.abs(playedSeconds - prevTime) > 5) {
+      const ws = getSocket();
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(
+          JSON.stringify({
+            type: "UpdateTimeline",
+            videoId: room.currentSong,
+            TimeLine: playedSeconds,
+            roomId: roomId,
+          })
+        );
+      }
+    }
+    prevTimeRef.current = playedSeconds;
+  };
+
 
   return (
     <ReactPlayer
@@ -93,7 +123,7 @@ export default function YouTubeVideo({ params }) {
       playing={true}
       muted={mute}
       onSeek={() => setPlaying(true)}
-      onProgress={({ playedSeconds }) => setPlayedSeconds(playedSeconds)}
+      onProgress={handleProgress}
     />
   );
 }
