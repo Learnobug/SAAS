@@ -74,7 +74,7 @@ export default function YouTubeVideo({ params }) {
   }, [id, room?.currentSong]);
 
   useEffect(() => {
-    if (!room || !room.currentSong || room.timeline == null || roomOwner) return;
+    if (!room || !room.currentSong || room.timeline == null ) return;
   
     const checkPlayerReady = () => {
       if (videoref.current && videoref.current.getCurrentTime) {
