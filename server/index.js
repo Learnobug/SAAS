@@ -191,6 +191,17 @@ wss.on('connection', (ws) => {
                 });
             }
         }
+        if(data.type === "chat"){
+            const roomId = data.roomId;
+            const room = rooms.get(roomId);
+            room.Users.forEach(client => {
+                if (client.readyState === ws.OPEN) {
+                    console.log("Sending chat to client");
+                    console.log(data.message);
+                    client.send(JSON.stringify({ type: "chat", message: data.message }));
+                }
+            });
+        }
 
         } catch (error) {
             console.log(error);

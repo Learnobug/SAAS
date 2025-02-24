@@ -29,9 +29,6 @@ export default function YouTubeVideo({ params }) {
       if(data.type=="TimeLine")
       {
         console.log("TimeLine Received:", data.TimeLine);
-        // if (videoref.current) {
-        //   videoref.current.seekTo(data.TimeLine);
-        // }
         setPlayedSeconds(data.TimeLine);
        setRoom((prevRoom) => ({ ...prevRoom, timeline: data.TimeLine }));
       }
