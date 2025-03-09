@@ -10,16 +10,16 @@ export default function YouTubeVideo({ params }) {
   const [playing, setPlaying] = useState(false);
   const [videoId, setVideoId] = useState("");
   const [mute, setMute] = useState(true);
-  const [playedSeconds, setPlayedSeconds] = useState(0);
+  const [playedSecond, setPlayedSeconds] = useState(0);
   const prevTimeRef = useRef(0);
 
    useEffect(()=>{
     const ws = getSocket();
     const handleMessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log(data);
+      //.log(data);
       if (data.type === "ChangeSong") {
-        console.log("ChangeSong Received:", data.videoId);
+        //.log("ChangeSong Received:", data.videoId);
         setVideoId(data.videoId);
         setRoom((prevRoom) => ({ ...prevRoom, currentSong: data.videoId }));
         setPlaying(true);
@@ -28,7 +28,7 @@ export default function YouTubeVideo({ params }) {
       }
       if(data.type=="TimeLine")
       {
-        console.log("TimeLine Received:", data.TimeLine);
+        //.log("TimeLine Received:", data.TimeLine);
         setPlayedSeconds(data.TimeLine);
        setRoom((prevRoom) => ({ ...prevRoom, timeline: data.TimeLine }));
       }
@@ -53,7 +53,7 @@ export default function YouTubeVideo({ params }) {
           JSON.stringify({
             type: "CurrentSong",
             videoId: room.currentSong,
-            TimeLine: playedSeconds,
+            TimeLine: playedSecond,
             roomId: roomId,
           })
         );
@@ -65,7 +65,7 @@ export default function YouTubeVideo({ params }) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [roomOwner, playedSeconds]);
+  }, [roomOwner, playedSecond]);
 
   useEffect(() => {
     if (!id && !room?.currentSong) return;
@@ -81,21 +81,21 @@ export default function YouTubeVideo({ params }) {
         const currentTime = videoref.current.getCurrentTime();
         if (currentTime !== null && !isNaN(currentTime)) {
           setVideoId(room.currentSong);
-          console.log("Setting video ID, current time:", currentTime);
+          //.log("Setting video ID, current time:", currentTime);
           videoref.current.seekTo(Number(room.timeline));
           setPlaying(true);
         } else {
-          console.log("Player not ready, retrying...");
+          //.log("Player not ready, retrying...");
           setTimeout(checkPlayerReady, 500);
         }
       }
     };
   
     checkPlayerReady();
-  }, [room, videoref]);
+  }, [room.timeline, videoref]);
   
   const handleVideoEnd  = () =>{
-    console.log("Video Ended");
+    //.log("Video Ended");
     const ws = getSocket();
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(
@@ -112,6 +112,9 @@ export default function YouTubeVideo({ params }) {
     setPlayedSeconds(playedSeconds);
 
     if (Math.abs(playedSeconds - prevTime) > 5) {
+      console.log("Sending TimeLine:", playedSeconds);
+      console.log("prevTime:", prevTime);
+      console.log("time", videoref.current.getCurrentTime()); 
       const ws = getSocket();
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(
