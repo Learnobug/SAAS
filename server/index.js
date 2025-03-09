@@ -94,12 +94,16 @@ wss.on('connection', (ws) => {
             {
                 const roomId = data.roomId;
                 const room = rooms.get(roomId);
-                const queue  = data.queue;
-                room.queue = queue;
+                const songId = data.songId;
+                const newQueue = room.queue.map((song) => (song.id === songId ? { ...song, upvotes: song.upvotes + 1 } : song))
+                newQueue.sort((a, b) => b.upvotes - a.upvotes)
+                room.queue = newQueue;
+
+                //  console.log("queue for handle upvote", room.queue );
                 room.Users.forEach(client => {
                     if (client.readyState === ws.OPEN) {
                         // console.log("Sending Queue to client");
-                        client.send(JSON.stringify({ type: "Queue", queue }));
+                        client.send(JSON.stringify({ type: "Queue", queue:room.queue }));
                     }
                 });
             }

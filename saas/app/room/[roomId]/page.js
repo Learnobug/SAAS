@@ -85,8 +85,9 @@ export default function RoomPage() {
   }
 
   const handleAddSong = () => {
-    const url = JSON.stringify(song)
-    const videoId = url.split("=")[1].split('"')[0]
+    const url = song;
+    const params = new URL(url).searchParams;
+    const videoId = params.get("v");
     fetchdata(videoId)
     setSong("")
   }
@@ -94,12 +95,11 @@ export default function RoomPage() {
   const handleupvote = (id) => {
     if (map.has(id)) return
     setMap(new Map(map).set(id, 1))
-    const newQueue = room.queue.map((song) => (song.id === id ? { ...song, upvotes: song.upvotes + 1 } : song))
-    newQueue.sort((a, b) => b.upvotes - a.upvotes)
-    setRoom((prevRoom) => ({ ...prevRoom, queue: newQueue }))
+   console.log("upvote",id);
+    // setRoom((prevRoom) => ({ ...prevRoom, queue: newQueue }))
     const ws = getSocket()
     if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: "HandleUpvotes", roomId, queue: newQueue }))
+      ws.send(JSON.stringify({ type: "HandleUpvotes", roomId,songId:id }))
     }
   }
 
